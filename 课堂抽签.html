@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课堂随机点名转盘</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            font-size: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>课堂随机点名转盘</h1>
+    <div class="wheel-container">
+        <canvas id="wheelCanvas" width="300" height="300"></canvas>
+    </div>
+    <button onclick="spinWheel()">旋转</button>
+    <div id="result"></div>
+
+    <script>
+        const students = ["李众举", "韩如意", "毕姝程", "李雅琦", "吕佳琦", "吕鸿君", "刘玉洁", 
+                          "李茗慧", "邹瀚锋", "李绪乐", "时梦泽", "狄会宇", "杨玉洁", "李文傲", 
+                          "王翰垚", "徐佳涵", "张敬宇", "李善宇", "吕祎凡", "张元吉"];
+
+        const canvas = document.getElementById("wheelCanvas");
+        const ctx = canvas.getContext("2d");
+        const wheelRadius = canvas.width / 2;
+        const sliceAngle = (2 * Math.PI) / students.length;
+        let spinning = false;
+        let rotation = 0;
+
+        function drawWheel() {
+            for (let i = 0; i < students.length; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = (i + 1) * sliceAngle;
+                ctx.beginPath();
+                ctx.moveTo(wheelRadius, wheelRadius);
+                ctx.arc(wheelRadius, wheelRadius, wheelRadius, startAngle, endAngle);
+                ctx.fillStyle = i % 2 === 0 ? "#f39c12" : "#3498db";
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(wheelRadius, wheelRadius);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "14px Arial";
+                ctx.fillText(students[i], wheelRadius - 10, 5);
+                ctx.restore();
+            }
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+            let spinTime = 3000; // 转盘旋转时间（毫秒）
+            let start = performance.now();
+            let finalAngle = Math.random() * 360; 
+
+            function animate(time) {
+                let elapsed = time - start;
+                let progress = elapsed / spinTime;
+                if (progress < 1) {
+                    rotation = easeOut(progress) * (360 * 5) + finalAngle;
+                    drawRotatedWheel(rotation);
+                    requestAnimationFrame(animate);
+                } else {
+                    spinning = false;
+                    const selectedIndex = Math.floor((rotation % 360) / (360 / students.length));
+                    document.getElementById("result").innerText = `选中学生: ${students[selectedIndex]}`;
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function easeOut(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function drawRotatedWheel(angle) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(wheelRadius, wheelRadius);
+            ctx.rotate((angle * Math.PI) / 180);
+            ctx.translate(-wheelRadius, -wheelRadius);
+            drawWheel();
+            ctx.restore();
+        }
+
+        drawWheel();
+    </script>
+
+</body>
+</html>
